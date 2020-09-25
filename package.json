@@ -1,0 +1,65 @@
+{
+  "_from": "discord-music-system",
+  "_inBundle": false,
+  "_location": "/discord-music-system",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "discord-music-system",
+    "name": "discord-music-system",
+    "escapedName": "discord-music-system",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/discord-music-system/-/discord-music-system-1.0.4.tgz",
+  "_shasum": "397fca43f33d9cafa2e59a854dadf6bedff4cee3",
+  "_spec": "discord-music-system",
+  "author": "RemyK#3876",
+  "bugs": {
+    "url": "https://github.com/RemyK888/discord-music-system"
+  },
+  "dependencies": {
+    "@discordjs/opus": "^0.3.2",
+    "discord.js": "^12.3.1",
+    "ffmpeg-static": "^4.2.7",
+    "node-fetch": "^2.6.1",
+    "popyt": "^4.1.1",
+    "ytdl-core": "^3.2.2",
+    "ytpl": "^1.0.1"
+  },
+  "deprecated": false,
+  "description": "A very simple and powerful music module for Discord bots. Control your music with reactions.",
+  "directories": {
+    "example": "example"
+  },
+  "homepage": "https://github.com/RemyK888/discord-music-system",
+  "keywords": [
+    "Discord",
+    "Music",
+    "Discord.Js",
+    "discord",
+    "music",
+    "RemyK",
+    "DBS",
+    "music-player",
+    "Youtube"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "discord-music-system",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RemyK888/discord-music-system.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "3.0.0",
+  "devDependencies": {}
+}
