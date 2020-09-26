@@ -19,7 +19,7 @@ const bot = new MusicBot({
 });
 
 client.on('message', message => { // When the bot receive a message
-    if(message.content.startsWith(options.prefix)) { // If the message starts with your prefix
+    if(message.content.startsWith('!')) { // If the message starts with your prefix
         bot.onMessage(message); // The music-system must read the message, to check if it is a music command and execute it.
     };
 });
