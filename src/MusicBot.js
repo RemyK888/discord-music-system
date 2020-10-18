@@ -466,9 +466,9 @@ class MusicBot {
     async playSong(song, message, serverQueue) {
         const queue = this.queue.get(message.guild.id);
         if (!song) {
-            queue.voiceChannel.leave();
-            this.queue.delete(message.guild.id);
-            return message.channel.send(new MessageEmbed().setColor('YELLOW').setTimestamp().setAuthor('Info').setDescription(`The \`music player\` has been **destroyed**!`));
+            await queue.voiceChannel.leave();
+            await this.queue.delete(message.guild.id);
+            return await message.channel.send(new MessageEmbed().setColor('YELLOW').setTimestamp().setAuthor('Info').setDescription(`The \`music player\` has been **destroyed**!`));
         };
         message.guild.me.voice.setSelfDeaf(true);
         const dispatcher = queue.connection.play(ytdl(song.url))
