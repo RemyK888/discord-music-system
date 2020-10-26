@@ -8,6 +8,7 @@
 ```
 npm install discord-music-system@latest
 ```
+
 ## 💻 Code example
 ```js
 const Discord = require('discord.js'); // Require discord.js
@@ -28,6 +29,9 @@ client.on('message', message => { // When the bot receive a message
 
 client.login('some token'); // Login with your bot token. You can find the token at https://discord.com/developers/applications/
 ```
+
+## 🚀 Language
+* You can custom the bot language by editing the `language.json` in the `language` folder (3 translation included).
 
 ## 🤖 Commands
 * **PLAY**
