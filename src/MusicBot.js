@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 
 const Package = require('../package.json');
+const Language = require('../language/language.json');
 
 const { MessageEmbed } = require('discord.js');
 const ytdl = require('ytdl-core');
@@ -24,14 +25,12 @@ class MusicBot {
      * @property {string} ytApiKey - Your YouTube API key.
      * @property {string} botClient - The Discord.Client();
      * @property {string} botPrefix - Your Discord bot prefix.
-     */
-
-    /**
-     *
      * @param {Options} options
      */
     constructor(options) {
+
         this.errorMsg = '> \x1b[33m[Discord Music System], \x1b[31mError: \x1b[37m ';
+        this.interErrorMsg = '> \x1b[33m[Discord Music System], \x1b[31mIntern Error: \x1b[37m ';
         this.warnMsg = '> \x1b[33m[Discord Music System], \x1b[31mWarning \x1b[37m ';
 
         if (!options.ytApiKey) {
@@ -51,16 +50,106 @@ class MusicBot {
         this.messagesReactions = new Map();
         this.playlistQueue = new Map();
 
+        this.messages = {
+            noPrivateMessages: Language.messages.noPrivateMessages || 'I do not reply to private messages.',
+            voiceChannelNeeded: Language.messages.voiceChannelNeeded || 'You need to be in a voice channel to use this command.',
+            cannotConnect: Language.messages.cannotConnect || 'I cannot connect to your voice channel, make sure I have the proper permissions!',
+            noArgs: Language.messages.noArgs || 'You have to enter a search term.',
+            sameVoiceChannel: Language.messages.noArgs || 'You must be in the same vocal channel as the bot to be able to listen to music.',
+            nothingPlaying: Language.messages.nothingPlaying || 'There is nothing currently playing.',
+            noMoreSongs: Language.messages.noMoreSongs || 'There is no more songs in the playlist.',
+            volBeetween: Language.messages.volBeetween || 'Volume must be a number between `0` and `100`!',
+            validNumberPosition: Language.messages.validNumberPosition || 'The position must be a valid number higher than \`0\`.',
+            couldNotBeFound: Language.messages.couldNotBeFound || 'This sound could not be found.',
+            restrictedOrNotFound: Language.messages.restrictedOrNotFound || 'This song is restricted or could not be found!',
+            hasBeenAdded: Language.messages.hasBeenAdded || 'has been added to the queue.',
+            errorWhileParsingVideo: Language.messages.errorWhileParsingVideo || 'An error occured while searching the video.',
+            errorWhileParsingPlaylist: Language.messages.errorWhileParsingPlaylist || 'An error occured while parsing the playlist songs.',
+        };
+
+        this.embeds = {
+            createdMusicPlayer: {
+                title: Language.embeds.createdMusicPlayer.title || 'Info',
+                description: Language.embeds.createdMusicPlayer.description || 'The `music player` has been **created**!',
+            },
+            nowPlaying: {
+                title: Language.embeds.nowPlaying.title || 'Now playing',
+                videoLink: Language.embeds.nowPlaying.videoLink || 'Video link',
+                channelLink: Language.embeds.nowPlaying.channelLink || 'Channel link',
+                remainingTime: Language.embeds.nowPlaying.remainingTime || 'Time remaining:',
+                live: Language.embeds.nowPlaying.live || '◉ LIVE',
+            },
+            skipSong: {
+                askedBy: Language.embeds.skipSong.askedBy || 'Asked by',
+                beenSkipped: Language.embeds.skipSong.beenSkipped || 'has been skipped',
+            },
+            volumeEmbed: {
+                title: Language.embeds.volumeEmbed.title || '🔊 Volume',
+                changedFrom: Language.embeds.volumeEmbed.changedFrom || 'Changed from',
+                to: Language.embeds.volumeEmbed.to || 'to',
+            },
+            pauseEmbed: {
+                title: Language.embeds.pauseEmbed.title || 'Info',
+                description: Language.embeds.pauseEmbed.description || '**⏸ Paused the music.**',
+                askedBy: Language.embeds.pauseEmbed.askedBy || 'Asked by',
+            },
+            resumeEmbed: {
+                title: Language.embeds.resumeEmbed.title || 'Info',
+                description: Language.embeds.resumeEmbed.description || '**▶ Resumed the music.**',
+                askedBy: Language.embeds.resumeEmbed.askedBy || 'Asked by',
+            },
+            removeEmbed: {
+                title: Language.embeds.removeEmbed.title || '🚫 Removed',
+                removedBy: Language.embeds.removeEmbed.removedBy || '🔎 Removed by',
+                published: Language.embeds.removeEmbed.published || 'Published',
+                views: Language.embeds.removeEmbed.views || 'Views',
+            },
+            errorEmbed: {
+                title: Language.embeds.errorEmbed.title || 'Error',
+            },
+            playerDestroyedEmbed: {
+                author: Language.embeds.playerDestroyedEmbed.author || "Info",
+                description: Language.embeds.playerDestroyedEmbed.description || "The `music player` has been **destroyed**!"
+            },
+            playEmbed: {
+                addedBy: Language.embeds.playEmbed.addedBy || "🔎 Added by",
+                luckySearch: Language.embeds.playEmbed.luckySearch || "with lucky search.",
+                published: Language.embeds.playEmbed.published || "Published",
+                views: Language.embeds.playEmbed.views || "Views"
+            },
+            queueEmbed: {
+                queue: Language.embeds.queueEmbed.queue || 'queue',
+            },
+            lyricsEmbed: {
+                searching: Language.embeds.lyricsEmbed.searching || "Searching...",
+                askedBy: Language.embeds.lyricsEmbed.askedBy || "Asked by "
+            },
+            addEmbed: {
+                playlist: Language.embeds.addEmbed.playlist || "The playlist",
+                hasBeenAdded: Language.embeds.addEmbed.hasBeenAdded || "has been added to the queue."
+            }
+        };
+
+        this.presence = {
+            nothing: Language.presence.nothing || '🎵 Nothing',
+        };
+
         console.log(`\x1b[33m------- Discord Music System -------\n\x1b[33m> \x1b[32mVersion: \x1b[37m${Package.version}\n\x1b[33m> \x1b[32mState: \x1b[37m\x1b[7mLoaded\x1b[0m\n\x1b[33m------------- Music Bot ------------\x1b[37m`);
     };
 
     /**
      * @api public
+     * @param {string} message The message from your discord code.
      */
     async onMessage(message) {
-        if (message.channel.type === 'dm') {
-            return this.sendErrorEmbed('I do not reply to private messages.')
+        if (!message) {
+            throw new Error(this.errorMsg + 'The message is required on the onMessage function.');
         };
+
+        if (message.channel.type === 'dm') {
+            return this.sendErrorEmbed(this.messages.noPrivateMessages, message);
+        };
+
         const args = message.content.split(' ').slice(1).join(' ');
 
         /*
@@ -68,32 +157,35 @@ class MusicBot {
         */
         if (message.content.startsWith(this.prefix + 'play') || message.content.startsWith(this.prefix + 'add') || message.content.startsWith(this.prefix + 'join')) {
             if (!message.member.voice.channel) {
-                return this.sendErrorEmbed('You need to be in a voice channel to play music!', message);
+                return this.sendErrorEmbed(this.messages.voiceChannelNeeded, message);
             };
 
             const permissions = message.member.voice.channel.permissionsFor(message.client.user);
             if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
-                return this.sendErrorEmbed('I cannot connect to your voice channel, make sure I have the proper permissions!', message);
+                return this.sendErrorEmbed(this.messages.cannotConnect, message);
             };
 
             if (!args) {
-                return this.sendErrorEmbed('You have to enter a search term.', message);
+                return this.sendErrorEmbed(this.messages.noArgs, message);
             };
 
             if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
-                return this.sendErrorEmbed('You must be in the same vocal channel as the bot to be able to listen to music.');
+                return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
             const serverQueue = this.queue.get(message.guild.id);
             if (!serverQueue) {
-                message.channel.send(new MessageEmbed().setColor('YELLOW').setTimestamp().setAuthor('Info').setDescription(`The \`music player\` has been **created**!`));
+                message.channel.send(new MessageEmbed().setColor('YELLOW').setTimestamp().setAuthor(this.embeds.createdMusicPlayer.title).setDescription(this.embeds.createdMusicPlayer.description));
             };
+
             if (this.isYouTubePlaylistURL(args)) {
                 await this.playPlaylist(args, message);
             }
+
             if (this.isYouTubeVideoURL(args)) {
                 return this.playVideoUrl(args, message);
             };
+
             if (!this.isYouTubePlaylistURL(args) && !this.isYouTubeVideoURL(args)) {
                 return this.playQuery(args, message);
             };
@@ -105,15 +197,15 @@ class MusicBot {
         if (message.content === (this.prefix + 'stop') || message.content === (this.prefix + 'kill') || message.content === (this.prefix + 'destroy') || message.content === (this.prefix + 'leave')) {
             const serverQueue = this.queue.get(message.guild.id);
             if (!message.member.voice.channel) {
-                return this.sendErrorEmbed('You have to be in a voice channel to stop the music!', message);
+                return this.sendErrorEmbed(this.messages.voiceChannelNeeded, message);
             };
 
             if (!serverQueue) {
-                return this.sendErrorEmbed('There is no song currently played or in queue.', message);
+                return this.sendErrorEmbed(this.messages.nothingPlaying, message);
             };
 
             if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
-                return this.sendErrorEmbed('You must be in the same vocal channel as the bot to be able to stop the music.', message);
+                return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
             serverQueue.songs = [];
@@ -145,7 +237,7 @@ class MusicBot {
 
             if (!serverQueue) {
                 if (!args) {
-                    return this.sendErrorEmbed('You have to enter a search term.', message);
+                    return this.sendErrorEmbed(this.messages.noArgs, message);
                 };
                 await this.getSongLyrics(args, message);
             };
@@ -157,11 +249,11 @@ class MusicBot {
         if (message.content.startsWith(this.prefix + 'np') || message.content.startsWith(this.prefix + 'nowplaying') || message.content.startsWith(this.prefix + 'current')) {
             const serverQueue = this.queue.get(message.guild.id);
             if (!serverQueue) {
-                return this.sendErrorEmbed('There is nothing playing.', message);
+                return this.sendErrorEmbed(this.messages.nothingPlaying, message);
             };
 
             if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
-                return this.sendErrorEmbed('You must be in the same vocal channel as the bot to be able to user this command.', message);
+                return this.sendErrorEmbed(this.messages.nothingPlaying, message);
             };
 
             const song = serverQueue.songs[0];
@@ -169,14 +261,14 @@ class MusicBot {
             const left = song.duration - seek;
 
             let nowPlaying = new MessageEmbed()
-                .setTitle('Now playing')
-                .setDescription(`\`${song.title}\`\n**[Video link](${song.url}) | [Channel link](${song.authorUrl})**`)
+                .setTitle(this.embeds.nowPlaying.title)
+                .setDescription(`\`${song.title}\`\n**[${this.embeds.nowPlaying.videoLink}](${song.url}) | [${this.embeds.nowPlaying.channelLink}](${song.authorUrl})**`)
                 .setColor('DARK_PURPLE')
                 .setThumbnail(song.thumbnailUrl)
-                .addField("\u200b", '`▶ ' + new Date(seek * 1000).toISOString().substr(11, 8) + ' [' + this.progressBar(song.duration == 0 ? seek : song.duration, seek, 20)[0] + '] ' + (song.duration == 0 ? ' ◉ LIVE' : new Date(song.duration * 1000).toISOString().substr(11, 8)) + '`');
+                .addField("\u200b", '`▶ ' + new Date(seek * 1000).toISOString().substr(11, 8) + ' [' + this.progressBar(song.duration == 0 ? seek : song.duration, seek, 20)[0] + '] ' + (song.duration == 0 ? ` ${this.embeds.nowPlaying.live}` : new Date(song.duration * 1000).toISOString().substr(11, 8)) + '`');
 
             if (song.duration > 0) {
-                nowPlaying.setFooter('Time Remaining: ' + new Date(left * 1000).toISOString().substr(11, 8));
+                nowPlaying.setFooter(`${this.embeds.nowPlaying.remainingTime} ` + new Date(left * 1000).toISOString().substr(11, 8));
             };
 
             return message.channel.send(nowPlaying);
@@ -187,20 +279,20 @@ class MusicBot {
         */
         if (message.content.startsWith(this.prefix + 'skip') || message.content.startsWith(this.prefix + 'next') || message.content.startsWith(this.prefix + '>>')) {
             if (!message.member.voice.channel) {
-                return this.sendErrorEmbed('You need to be in a voice channel to play music!', message);
+                return this.sendErrorEmbed(this.messages.voiceChannelNeeded, message);
             };
 
             const serverQueue = this.queue.get(message.guild.id);
             if (!serverQueue) {
-                return this.sendErrorEmbed('There is nothing playing that I could skip.', message);
+                return this.sendErrorEmbed(this.messages.nothingPlaying, message);
             };
 
             if (!serverQueue.songs[1]) {
-                return this.sendErrorEmbed('There is no more songs in the playlist.', message);
+                return this.sendErrorEmbed(this.messages.noMoreSongs, message);
             };
 
             if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
-                return this.sendErrorEmbed('You must be in the same vocal channel as the bot to be able to skip a song.', message);
+                return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
             serverQueue.connection.dispatcher.end();
@@ -209,7 +301,7 @@ class MusicBot {
                 await this.messagesReactions.delete(message.guild.id);
             });
 
-            message.channel.send(new MessageEmbed().setColor('ORANGE').setFooter('Asked by ' + message.author.tag, message.author.displayAvatarURL()).setDescription('⏩ `' + serverQueue.songs[0].title + '` has been skipped.'))
+            message.channel.send(new MessageEmbed().setColor('ORANGE').setFooter(`${this.embeds.skipSong.askedBy} ` + message.author.tag, message.author.displayAvatarURL()).setDescription('⏩ `' + serverQueue.songs[0].title + `\` ${this.embeds.skipSong.beenSkipped}`));
         };
 
         /*
@@ -217,20 +309,20 @@ class MusicBot {
         */
         if (message.content.startsWith(this.prefix + 'queue') || message.content.startsWith(this.prefix + 'list') || message.content.startsWith(this.prefix + 'show')) {
             if (!message.member.voice.channel) {
-                return this.sendErrorEmbed('You need to be in a voice channel to see the queue.', message);
+                return this.sendErrorEmbed(this.messages.voiceChannelNeeded, message);
             };
 
             if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
-                return this.sendErrorEmbed('You must be in the same vocal channel as the bot to be able to see the queue.', message);
+                return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
             const serverQueue = this.queue.get(message.guild.id);
             if (!serverQueue) {
-                return this.sendErrorEmbed('There is nothing playing.', message);
+                return this.sendErrorEmbed(this.messages.nothingPlaying, message);
             };
 
             if (!serverQueue.songs[1]) {
-                return this.sendErrorEmbed('There is no more songs in the queue.', message);
+                return this.sendErrorEmbed(this.messages.noMoreSongs, message);
             };
 
             return this.sendQueueEmbed(serverQueue, message);
@@ -242,26 +334,26 @@ class MusicBot {
         if (message.content.startsWith(this.prefix + 'volume') || message.content.startsWith(this.prefix + 'setvolume')) {
             const serverQueue = this.queue.get(message.guild.id);
             if (!message.member.voice.channel) {
-                return this.sendErrorEmbed('You need to be in a voice channel to see the queue.', message);
+                return this.sendErrorEmbed(this.messages.voiceChannelNeeded, message);
             };
 
             if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
-                return this.sendErrorEmbed('You must be in the same vocal channel as the bot to be able to change the volume.', message);
+                return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
             if (!serverQueue) {
-                return this.sendErrorEmbed('There is no song currently played, could not change volume.', message)
+                return this.sendErrorEmbed(this.messages.nothingPlaying, message)
             };
 
             const volumeNumber = parseInt(args, 10);
             if (!isNaN(volumeNumber) && (volumeNumber >= 0 && volumeNumber <= 100)) {
-                message.channel.send(new MessageEmbed().setColor('GOLD').setTitle('🔊 Volume').setDescription(`Changed from \`${serverQueue.volume * 100}\` to \`${volumeNumber}\``));
+                message.channel.send(new MessageEmbed().setColor('GOLD').setTitle(this.embeds.volumeEmbed.title).setDescription(`${this.embeds.volumeEmbed.changedFrom} \`${serverQueue.volume * 100}\` ${this.embeds.volumeEmbed.to} \`${volumeNumber}\``));
                 serverQueue.volume = volumeNumber / 100;
                 if (serverQueue.connection.dispatcher) {
                     serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume);
                 };
             } else {
-                return this.sendErrorEmbed('Volume must be a number between `0` and `100`!', message);
+                return this.sendErrorEmbed(this.messages.volBeetween, message);
             };
         };
 
@@ -270,22 +362,22 @@ class MusicBot {
         */
         if (message.content.startsWith(this.prefix + 'pause')) {
             if (!message.member.voice.channel) {
-                return this.sendErrorEmbed('You need to be in a voice channel to pause the music.', message);
+                return this.sendErrorEmbed(this.messages.voiceChannelNeeded, message);
             };
 
             if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
-                return this.sendErrorEmbed('You must be in the same vocal channel as the bot to be able to pause the music.', message);
+                return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
             const serverQueue = this.queue.get(message.guild.id);
             if (!serverQueue) {
-                return this.sendErrorEmbed('There is nothing playing.', message)
+                return this.sendErrorEmbed(this.messages.nothingPlaying, message)
             };
 
             if (serverQueue && serverQueue.playing) {
                 serverQueue.playing = false;
                 serverQueue.connection.dispatcher.pause();
-                return message.channel.send(new MessageEmbed().setTitle('Info').setColor('GOLD').setDescription('**⏸ Paused the music.**').setTimestamp().setFooter('Asked by ' + message.author.tag, message.author.displayAvatarURL()));
+                return message.channel.send(new MessageEmbed().setTitle(this.embeds.pauseEmbed.title).setColor('GOLD').setDescription(this.embeds.pauseEmbed.description).setTimestamp().setFooter(`${this.embeds.pauseEmbed.askedBy} ` + message.author.tag, message.author.displayAvatarURL()));
             };
         };
 
@@ -294,22 +386,22 @@ class MusicBot {
         */
         if (message.content.startsWith(this.prefix + 'resume')) {
             if (!message.member.voice.channel) {
-                return this.sendErrorEmbed('You need to be in a voice channel to resume the music.', message);
+                return this.sendErrorEmbed(this.messages.voiceChannelNeeded, message);
             };
 
             if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
-                return this.sendErrorEmbed('You must be in the same vocal channel as the bot to be able to resume the music.', message);
+                return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
             const serverQueue = this.queue.get(message.guild.id);
             if (!serverQueue) {
-                return this.sendErrorEmbed('There is nothing playing.', message);
+                return this.sendErrorEmbed(this.messages.nothingPlaying, message);
             };
 
             if (serverQueue && !serverQueue.playing) {
                 serverQueue.playing = true;
                 serverQueue.connection.dispatcher.resume();
-                return message.channel.send(new MessageEmbed().setTitle('Info').setColor('GOLD').setDescription('**▶ Resumed the music.**').setTimestamp().setFooter('Asked by ' + message.author.tag, message.author.displayAvatarURL()));
+                return message.channel.send(new MessageEmbed().setTitle(this.embeds.resumeEmbed.title).setColor('GOLD').setDescription(this.embeds.resumeEmbed.description).setTimestamp().setFooter(`${this.embeds.resumeEmbed.askedBy} ` + message.author.tag, message.author.displayAvatarURL()));
             };
         };
 
@@ -319,19 +411,19 @@ class MusicBot {
         if (message.content.startsWith(this.prefix + 'remove') || message.content.startsWith(this.prefix + 'delete')) {
             const serverQueue = this.queue.get(message.guild.id);
             if (!serverQueue) {
-                return this.sendErrorEmbed('There is nothing playing.', message);
+                return this.sendErrorEmbed(this.messages.nothingPlaying, message);
             };
 
             if (!serverQueue.songs[1]) {
-                return this.sendErrorEmbed('There is no more songs in the queue.', message);
+                return this.sendErrorEmbed(this.messages.noMoreSongs, message);
             };
 
             const index = parseInt(args, 10);
             if (!isNaN(index) && index >= 1 && serverQueue.songs.length > index) {
-                message.channel.send(new MessageEmbed().setTitle('🚫 Removed').setColor('AQUA').setDescription(`[${serverQueue.songs[index].author}](${serverQueue.songs[index].authorUrl})\n**[${serverQueue.songs[index].title}](${serverQueue.songs[index].url})**\n\`🔎 Removed by ${message.author.username}.\``).addField('Published', '`' + serverQueue.songs[index].published + '`', true).addField('Views', '`' + serverQueue.songs[index].views + '`', true).setFooter(this.client.user.username, this.client.user.displayAvatarURL()));
+                message.channel.send(new MessageEmbed().setTitle(this.embeds.removeEmbed.title).setColor('AQUA').setDescription(`[${serverQueue.songs[index].author}](${serverQueue.songs[index].authorUrl})\n**[${serverQueue.songs[index].title}](${serverQueue.songs[index].url})**\n\`${this.embeds.removeEmbed.removedBy} ${message.author.username}.\``).addField(this.embeds.removeEmbed.published, '`' + serverQueue.songs[index].published + '`', true).addField(this.embeds.removeEmbed.views, '`' + serverQueue.songs[index].views + '`', true).setFooter(this.client.user.username, this.client.user.displayAvatarURL()));
                 serverQueue.songs.splice(index, 1);
             } else {
-                this.sendErrorEmbed('The position must be a valid number higher than \`0\`.', message);
+                this.sendErrorEmbed(this.messages.validNumberPosition, message);
             };
         };
 
@@ -362,18 +454,11 @@ class MusicBot {
     /**
      * @api private
      */
-    isCommandName(message) {
-        if (message.content.startsWith(this.prefix)) {
-            return true;
-        } else {
-            return false;
-        };
-    };
-
-    /**
-     * @api private
-     */
     isYouTubeVideoURL(url, videoClass = /^(https?:\/\/)?(www\.)?(m\.)?(youtube\.com|youtu\.?be)\/.+$/gi) {
+        if (!url) {
+            throw new Error(this.interErrorMsg + 'The URL is required on the isYouTubeVideoURL function.');
+        };
+
         if (videoClass.test(url)) {
             return true;
         } else {
@@ -385,6 +470,10 @@ class MusicBot {
      * @api private
      */
     isYouTubePlaylistURL(url, playlistClass = /^.*(list=)([^#\&\?]*).*/gi) {
+        if (!url) {
+            throw new Error(this.interErrorMsg + 'The URL is required on the isYouTubePlaylistURL function.');
+        };
+
         if (playlistClass.test(url)) {
             return true;
         } else {
@@ -396,6 +485,14 @@ class MusicBot {
      * @api private
      */
     progressBar(totalTime, currentTime, barSize = 20, line = '▬', slider = '🔘') {
+        if (!totalTime) {
+            throw new Error(this.interErrorMsg + 'The total time is required on the progressBar function.');
+        };
+
+        if (!currentTime) {
+            throw new Error(this.interErrorMsg + 'The current time is required on the progressBar function.');
+        };
+
         if (currentTime > totalTime) {
             const bar = line.repeat(barSize + 2);
             const percentage = (currentTime / totalTime) * 100;
@@ -416,28 +513,47 @@ class MusicBot {
      * @api private
      */
     sendErrorEmbed(errorMessage, message) {
-        return message.channel.send(new MessageEmbed().setColor('RED').setTimestamp().setDescription('❌ ' + errorMessage).setAuthor('Error'));
+        if (!errorMessage) {
+            throw new Error(this.interErrorMsg + 'The error message is required on the sendErrorEmbed function.');
+        };
+
+        if (!message) {
+            throw new Error(this.interErrorMsg + 'The message is required on the sendErrorEmbed function.');
+        };
+
+        return message.channel.send(new MessageEmbed().setColor('RED').setTimestamp().setDescription('❌ ' + errorMessage).setAuthor(this.embeds.errorEmbed.title));
     };
 
     /**
      * @api private
      */
     async playQuery(args, message) {
+        if (!args) {
+            throw new Error(this.interErrorMsg + 'The args are required on the playQuery function.');
+        };
+
+        if (!message) {
+            throw new Error(this.interErrorMsg + 'The message is required on the playQuery function.');
+        };
+
         const youtube = new YouTube(this.apiKey);
         const infos = await youtube.searchVideos(args, 1);
         if (infos.results.length === 0) {
-            return this.sendErrorEmbed('This sound could not be found.', message);
+            return this.sendErrorEmbed(this.messages.couldNotBeFound, message);
         };
+
         const serverQueue = this.queue.get(message.guild.id);
         const songInfo = await ytdl.getInfo(infos.results[0].url);
         if (!songInfo) {
-            return this.sendErrorEmbed('This song is restricted or could not be found!', message);
+            return this.sendErrorEmbed(this.messages.restrictedOrNotFound, message);
         };
+
         const song = { id: songInfo.videoDetails.video_id, title: songInfo.videoDetails.title, url: songInfo.videoDetails.video_url, author: songInfo.videoDetails.author.name, authorUrl: songInfo.videoDetails.author.channel_url, duration: songInfo.videoDetails.lengthSeconds, thumbnailUrl: songInfo.player_response.videoDetails.thumbnail.thumbnails.pop().url, published: songInfo.videoDetails.publishDate, views: songInfo.player_response.videoDetails.viewCount };
         if (serverQueue) {
             await serverQueue.songs.push(song);
-            return await message.channel.send(new MessageEmbed().setColor('DARK_PURPLE').setTimestamp().setThumbnail(song.thumbnailUrl).setDescription(`**\`${song.title}\`** has been added to the queue.`));
+            return await message.channel.send(new MessageEmbed().setColor('DARK_PURPLE').setTimestamp().setThumbnail(song.thumbnailUrl).setDescription(`**\`${song.title}\`** ${this.messages.hasBeenAdded}`));
         };
+
         const queueConstruct = {
             textChannel: message.channel,
             voiceChannel: message.member.voice.channel,
@@ -456,7 +572,7 @@ class MusicBot {
             this.queue.delete(message.guild.id);
             await message.member.voice.channel.leave();
             //await this.updateClientPresence(message);
-            return this.sendErrorEmbed(`I could not join the voice channel: \`${error}\``, message);
+            return this.sendErrorEmbed(`${this.cannotConnect} \`${error}\``, message);
         };
     };
 
@@ -464,11 +580,15 @@ class MusicBot {
      * @api private
      */
     async playSong(song, message, serverQueue) {
+        if (!message) {
+            throw new Error(this.interErrorMsg + 'The message is required on the playSong function.');
+        };
+
         const queue = this.queue.get(message.guild.id);
         if (!song) {
             await queue.voiceChannel.leave();
             await this.queue.delete(message.guild.id);
-            return await message.channel.send(new MessageEmbed().setColor('YELLOW').setTimestamp().setAuthor('Info').setDescription(`The \`music player\` has been **destroyed**!`));
+            return await message.channel.send(new MessageEmbed().setColor('YELLOW').setTimestamp().setAuthor(this.embeds.playerDestroyedEmbed.author).setDescription(this.embeds.playerDestroyedEmbed.description));
         };
         message.guild.me.voice.setSelfDeaf(true);
         const dispatcher = queue.connection.play(ytdl(song.url))
@@ -481,7 +601,7 @@ class MusicBot {
         dispatcher.setVolumeLogarithmic(queue.volume);
         if (!serverQueue) {
             //this.updateClientPresence(message);
-            var playingMessage = await queue.textChannel.send(new MessageEmbed().setColor('RED').setDescription(`[${song.author}](${song.authorUrl})\n**[${song.title}](${song.url})**\n\`🔎 Added by ${message.author.username} with lucky search.\``).addField('Published', '`' + song.published + '`', true).addField('Views', '`' + song.views + '`', true).setFooter(this.client.user.username, this.client.user.displayAvatarURL()))
+            var playingMessage = await queue.textChannel.send(new MessageEmbed().setColor('RED').setDescription(`[${song.author}](${song.authorUrl})\n**[${song.title}](${song.url})**\n\`${this.embeds.playEmbed.addedBy} ${message.author.username} ${this.embeds.playEmbed.luckySearch}\``).addField(this.embeds.playEmbed.published, '`' + song.published + '`', true).addField(this.embeds.playEmbed.views, '`' + song.views + '`', true).setFooter(this.client.user.username, this.client.user.displayAvatarURL()))
             await this.musicMessageReact(playingMessage);
             await this.reactionsMessageSystem(playingMessage, queue, song, message);
         };
@@ -492,11 +612,16 @@ class MusicBot {
      */
     async updateClientPresence(message) {
         if (!message) {
-            this.client.user.setActivity('🎵 Nothing', { type: 'LISTENING' });
+            throw new Error(this.interErrorMsg + 'The message is required on the updateClientPresence function.');
         };
+
+        if (!message) {
+            this.client.user.setActivity(this.presence.nothing, { type: 'LISTENING' });
+        };
+
         const serverQueue = await this.queue.get(message.guild.id);
         if (!serverQueue) {
-            this.client.user.setActivity('🎵 Nothing', { type: 'LISTENING' });
+            this.client.user.setActivity(this.presence.nothing, { type: 'LISTENING' });
         } else {
             this.client.user.setActivity('🎵 ' + serverQueue.songs[0].title, { type: 'LISTENING' });
         };
@@ -506,27 +631,45 @@ class MusicBot {
      * @api private
      */
     async getSongLyrics(args, message) {
-        var msg = await message.channel.send(new MessageEmbed().setTimestamp().setAuthor('Searching...', 'https://www.aerobusbcn.com/sites/all/themes/aerobus/images/ajax-loader.gif').setColor('YELLOW')) || message.send(new MessageEmbed().setTimestamp().setAuthor('Searching...', 'https://www.aerobusbcn.com/sites/all/themes/aerobus/images/ajax-loader.gif').setColor('YELLOW'));
+        if (!args) {
+            throw new Error(this.interErrorMsg + 'The args are required on the getSongLyrics function.');
+        };
+
+        if (!message) {
+            throw new Error(this.interErrorMsg + 'The message is required on the getSongLyrics function.');
+        };
+
+        var msg = await message.channel.send(new MessageEmbed().setTimestamp().setAuthor(this.embeds.lyricsEmbed.searching, 'https://www.aerobusbcn.com/sites/all/themes/aerobus/images/ajax-loader.gif').setColor('YELLOW')) || message.send(new MessageEmbed().setTimestamp().setAuthor(this.embeds.lyricsEmbed.searching, 'https://www.aerobusbcn.com/sites/all/themes/aerobus/images/ajax-loader.gif').setColor('YELLOW'));
         var res = await fetch(`https://some-random-api.ml/lyrics?title=${encodeURIComponent(args)}`)
         var lyrics = await res.json()
         if (lyrics.error) {
-            return msg.edit(new MessageEmbed().setColor('RED').setTimestamp().setAuthor('Error').setDescription('❌ I could not find this song.'));
+            return msg.edit(new MessageEmbed().setColor('RED').setTimestamp().setAuthor(this.embeds.errorEmbed.title).setDescription('❌ ' + this.messages.couldNotBeFound));
         };
+
         if (lyrics.lyrics.length >= 2048) {
             var cut = lyrics.lyrics.length - 2000
             lyrics.lyrics = lyrics.lyrics.slice(0, 0 - cut) + '...'
         };
-        return msg.edit(new MessageEmbed().setColor('ORANGE').setTimestamp().setFooter('Asked by ' + message.author.tag, message.author.displayAvatarURL()).setTitle('📜 ' + lyrics.title).setDescription('`' + lyrics.lyrics + '`'))
+
+        return msg.edit(new MessageEmbed().setColor('ORANGE').setTimestamp().setFooter(this.embeds.lyricsEmbed.askedBy + message.author.tag, message.author.displayAvatarURL()).setTitle('📜 ' + lyrics.title).setDescription('`' + lyrics.lyrics + '`'))
     };
 
     /**
      * @api private
      */
     async sendQueueEmbed(serverQueue, message) {
+        if (!serverQueue) {
+            throw new Error(this.interErrorMsg + 'The serverQueue is required on the sendQueueEmbed function.');
+        };
+
+        if (!message) {
+            throw new Error(this.interErrorMsg + 'The message is required on the sendQueueEmbed function.');
+        };
+
         const QueueEmbed = new MessageEmbed()
             .setColor('DARK_BLUE')
             .setTimestamp()
-            .setTitle('🎹 `' + message.guild.name + '` queue');
+            .setTitle('🎹 `' + message.guild.name + '`' + this.embeds.queueEmbed.queue);
         for (let i = 1; i < serverQueue.songs.length && i < 26; i++) {
             QueueEmbed.addField(`\`#${i}\``, `**[${serverQueue.songs[i].title}](${serverQueue.songs[i].url})**`);
         };
@@ -537,8 +680,24 @@ class MusicBot {
      * @api private
      */
     async reactionsMessageSystem(message, queue, song, basicMessage) {
+        if (!message) {
+            throw new Error(this.interErrorMsg + 'The message is required on the reactionMessageSystem function.');
+        };
+
+        if (!queue) {
+            throw new Error(this.interErrorMsg + 'The queue is required on the reactionMessageSystem function.');
+        };
+
+        if (!song) {
+            throw new Error(this.interErrorMsg + 'The song is required on the reactionMessageSystem function.');
+        };
+
+        if (!basicMessage) {
+            throw new Error(this.interErrorMsg + 'The basicMessage is required on the reactionMessageSystem function.');
+        };
+
         this.messagesReactions.set(message.guild.id, message.id);
-        const filter = (reaction, user) => user.id !== this.client.user.id && basicMessage.member.voice.channel && reaction.emoji.name === '⏯' || reaction.emoji.name === '⏭' || reaction.emoji.name === '🔈' || reaction.emoji.name === '🔊' || reaction.emoji.name === '⏹' && message.member.voice.channel.id === message.guild.me.voice.channel.id;
+        const filter = (reaction, user) => user.id !== this.client.user.id && basicMessage.member.voice.channel && reaction.emoji.name === '⏯' || reaction.emoji.name === '⏭' || reaction.emoji.name === '🔈' || reaction.emoji.name === '🔊' || reaction.emoji.name === '⏹' && basicMessage.member.voice.channel.id === this.client.voice.connections.get(message.guild.id).channel.id
         var collector = message.createReactionCollector(filter, {
             time: song.duration > 0 ? song.duration * 1000 : 600000
         });
@@ -612,19 +771,27 @@ class MusicBot {
     };
 
     async playVideoUrl(url, message) {
+        if (!url) {
+            throw new Error(this.interErrorMsg + 'The url is required on the playVideoUrl function.');
+        };
+
+        if (!message) {
+            throw new Error(this.interErrorMsg + 'The message is required on the playVideoUrl function.');
+        };
+
         const serverQueue = this.queue.get(message.guild.id);
         if (serverQueue && serverQueue.songs && serverQueue.playing) {
             const songInfo = await ytdl.getInfo(url);
             if (!songInfo) {
-                return this.sendErrorEmbed('An error occured while parsing the playlist songs.', message);
+                return this.sendErrorEmbed(this.messages.errorWhileParsingVideo, message);
             };
             const song = { id: songInfo.videoDetails.video_id, title: songInfo.videoDetails.title, url: songInfo.videoDetails.video_url, author: songInfo.videoDetails.author.name, authorUrl: songInfo.videoDetails.author.channel_url, duration: songInfo.videoDetails.lengthSeconds, thumbnailUrl: songInfo.player_response.videoDetails.thumbnail.thumbnails.pop().url, published: songInfo.videoDetails.publishDate, views: songInfo.player_response.videoDetails.viewCount };
             serverQueue.songs.push(song);
-            return await message.channel.send(new MessageEmbed().setColor('DARK_PURPLE').setTimestamp().setThumbnail(song.thumbnailUrl).setDescription(`**\`${song.title}\`** has been added to the queue.`));
+            return await message.channel.send(new MessageEmbed().setColor('DARK_PURPLE').setTimestamp().setThumbnail(song.thumbnailUrl).setDescription(`**\`${song.title}\`** ${this.embeds.addEmbed.hasBeenAdded}`));
         } else {
             const songInfo = await ytdl.getInfo(url);
             if (!songInfo) {
-                return this.sendErrorEmbed('An error occured while parsing the playlist songs.', message);
+                return this.sendErrorEmbed(this.messages.errorWhileParsingVideo, message);
             };
             const song = { id: songInfo.videoDetails.video_id, title: songInfo.videoDetails.title, url: songInfo.videoDetails.video_url, author: songInfo.videoDetails.author.name, authorUrl: songInfo.videoDetails.author.channel_url, duration: songInfo.videoDetails.lengthSeconds, thumbnailUrl: songInfo.player_response.videoDetails.thumbnail.thumbnails.pop().url, published: songInfo.videoDetails.publishDate, views: songInfo.player_response.videoDetails.viewCount };
             const queueConstruct = {
@@ -641,12 +808,12 @@ class MusicBot {
             try {
                 const connection = await message.member.voice.channel.join();
                 queueConstruct.connection = connection;
-                this.playSong(song, message);
+                this.playSong(song, message, serverQueue);
             } catch (error) {
                 this.queue.delete(message.guild.id);
                 await message.member.voice.channel.leave();
                 //await this.updateClientPresence(message);
-                return this.sendErrorEmbed(`I could not join the voice channel: \`${error}\``, message);
+                return this.sendErrorEmbed(`${this.messages.cannotConnect} \`${error}\``, message);
             };
         };
     };
@@ -656,6 +823,14 @@ class MusicBot {
      * @api private
      */
     async playPlaylist(query, message) {
+        if (!query) {
+            throw new Error(this.interErrorMsg + 'The query is required on the playPlaylist function.');
+        };
+
+        if (!message) {
+            throw new Error(this.interErrorMsg + 'The message is required on the playPlaylist function.');
+        };
+
         const serverQueue = this.queue.get(message.guild.id);
         if (ytpl.validateID(query)) {
             const playlistID = await ytpl.getPlaylistID(query).catch(console.error);
@@ -671,20 +846,20 @@ class MusicBot {
                         playing: true,
                     };
                     if (serverQueue && serverQueue.playing) {
-                        message.channel.send(new MessageEmbed().setColor('DARK_PURPLE').setTimestamp().setThumbnail(playlist.items[0].thumbnail).setDescription(`The playlist **\`${playlist.title}\`** has been added to the queue.`));
+                        message.channel.send(new MessageEmbed().setColor('DARK_PURPLE').setTimestamp().setThumbnail(playlist.items[0].thumbnail).setDescription(`${this.embeds.addEmbed.playlist} **\`${playlist.title}\`** ${this.embeds.addEmbed.hasBeenAdded}`));
                     };
                     (playlist.items.map(async (i) => {
                         if (serverQueue && serverQueue.playing === true) {
                             const songInfo = await ytdl.getInfo(i.url);
                             if (!songInfo) {
-                                return this.sendErrorEmbed('An error occured while parsing the playlist songs.', message);
+                                return this.sendErrorEmbed(this.messages.errorWhileParsingPlaylist, message);
                             };
                             const song = { id: songInfo.videoDetails.video_id, title: songInfo.videoDetails.title, url: songInfo.videoDetails.video_url, author: songInfo.videoDetails.author.name, authorUrl: songInfo.videoDetails.author.channel_url, duration: songInfo.videoDetails.lengthSeconds, thumbnailUrl: songInfo.player_response.videoDetails.thumbnail.thumbnails.pop().url, published: songInfo.videoDetails.publishDate, views: songInfo.player_response.videoDetails.viewCount };
                             return serverQueue.songs.push(song);
                         } else {
                             const songInfo = await ytdl.getInfo(i.url);
                             if (!songInfo) {
-                                return this.sendErrorEmbed('An error occured while parsing the playlist songs.', message);
+                                return this.sendErrorEmbed(this.messages.errorWhileParsingPlaylist, message);
                             };
                             const song = { id: songInfo.videoDetails.video_id, title: songInfo.videoDetails.title, url: songInfo.videoDetails.video_url, author: songInfo.videoDetails.author.name, authorUrl: songInfo.videoDetails.author.channel_url, duration: songInfo.videoDetails.lengthSeconds, thumbnailUrl: songInfo.player_response.videoDetails.thumbnail.thumbnails.pop().url, published: songInfo.videoDetails.publishDate, views: songInfo.player_response.videoDetails.viewCount };
                             queueConstruct.songs.push(song);
@@ -695,12 +870,12 @@ class MusicBot {
                         try {
                             const connection = await message.member.voice.channel.join();
                             queueConstruct.connection = connection;
-                            this.playSong(queueConstruct.songs[0], message);
+                            this.playSong(queueConstruct.songs[0], message, serverQueue);
                         } catch (error) {
                             this.queue.delete(message.guild.id);
                             await message.member.voice.channel.leave();
                             //await this.updateClientPresence(message);
-                            return this.sendErrorEmbed(`I could not join the voice channel: \`${error}\``, message);
+                            return this.sendErrorEmbed(`${this.messages.cannotConnect} \`${error}\``, message);
                         };
                     };
                 };
@@ -712,6 +887,10 @@ class MusicBot {
      * @api private
      */
     async musicMessageReact(message) {
+        if (!message) {
+            throw new Error(this.interErrorMsg + 'The message is required on the musicMessageReact function.');
+        };
+
         await message.react('⏯');
         await message.react('⏭');
         await message.react('🔈');
