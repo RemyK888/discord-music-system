@@ -1,4 +1,16 @@
 /* 
+  ____    _                                   _               __  __                 _                      ____                  _                      
+ |  _ \  (_)  ___    ___    ___    _ __    __| |             |  \/  |  _   _   ___  (_)   ___              / ___|   _   _   ___  | |_    ___   _ __ ___  
+ | | | | | | / __|  / __|  / _ \  | '__|  / _` |    _____    | |\/| | | | | | / __| | |  / __|    _____    \___ \  | | | | / __| | __|  / _ \ | '_ ` _ \ 
+ | |_| | | | \__ \ | (__  | (_) | | |    | (_| |   |_____|   | |  | | | |_| | \__ \ | | | (__    |_____|    ___) | | |_| | \__ \ | |_  |  __/ | | | | | |
+ |____/  |_| |___/  \___|  \___/  |_|     \__,_|             |_|  |_|  \__,_| |___/ |_|  \___|             |____/   \__, | |___/  \__|  \___| |_| |_| |_|
+                                                                                                                    |___/                                
+
+*/
+
+
+
+/* 
 Copyright 2020, RemyK
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -55,7 +67,7 @@ class MusicBot {
             voiceChannelNeeded: Language.messages.voiceChannelNeeded || 'You need to be in a voice channel to use this command.',
             cannotConnect: Language.messages.cannotConnect || 'I cannot connect to your voice channel, make sure I have the proper permissions!',
             noArgs: Language.messages.noArgs || 'You have to enter a search term.',
-            sameVoiceChannel: Language.messages.noArgs || 'You must be in the same vocal channel as the bot to be able to listen to music.',
+            sameVoiceChannel: Language.messages.sameVoiceChannel || 'You must be in the same vocal channel as the bot to be able to listen to music.',
             nothingPlaying: Language.messages.nothingPlaying || 'There is nothing currently playing.',
             noMoreSongs: Language.messages.noMoreSongs || 'There is no more songs in the playlist.',
             volBeetween: Language.messages.volBeetween || 'Volume must be a number between `0` and `100`!',
@@ -134,12 +146,32 @@ class MusicBot {
             nothing: Language.presence.nothing || '🎵 Nothing',
         };
 
-        console.log(`\x1b[33m------- Discord Music System -------\n\x1b[33m> \x1b[32mVersion: \x1b[37m${Package.version}\n\x1b[33m> \x1b[32mState: \x1b[37m\x1b[7mLoaded\x1b[0m\n\x1b[33m------------- Music Bot ------------\x1b[37m`);
+        console.log(`\x1b[33m------- Discord Music System -------\n\x1b[33m> \x1b[32mVersion: \x1b[37m${Package.version}\n\x1b[33m> \x1b[32mState: \x1b[37m\x1b[7mLoaded\x1b[0m\n\x1b[33m------------- Music Bot ------------\x1b[37m\n\x1b[44mNEW:\x1b[0m  \x1b[4mCustom language translation: edit the language.json in the language folder!\x1b[0m`);
     };
 
     /**
+     * Enable the music system using this line.
      * @api public
-     * @param {string} message The message from your discord code.
+     * @param {message} message The message from your discord code.
+     * @example
+     * const Discord = require('discord.js'); // Require discord.js
+     * const client = new Discord.Client(); // Create the bot client.
+     * const MusicBot = require('discord-music-system'); // Require the best package ever created on NPM (= require discord-music-system)
+     *
+     * const bot = new MusicBot({
+     *    botPrefix: 'some prefix', // Example: !
+     *    ytApiKey: 'your Ytb API key', // Video to explain how to get it: https://www.youtube.com/watch?v=VqML5F8hcRQ
+     *    botClient: client // Your Discord client. Here we're using discord.js so it's the Discord.Client()
+     * });
+     *
+     * client.on('message', message => { // When the bot receive a message
+     *        if(message.content.startsWith(bot.prefix)) { // If the message starts with your prefix
+     *           bot.onMessage(message); // The music-system must read the message, to check if it is a music command and execute it.
+     *        };
+     * });
+     *
+     * client.login('some token'); // Login with your bot token. You can find the token at https://discord.com/developers/applications/
+     * 
      */
     async onMessage(message) {
         if (!message) {
@@ -169,13 +201,14 @@ class MusicBot {
                 return this.sendErrorEmbed(this.messages.noArgs, message);
             };
 
-            if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
-                return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
-            };
-
             const serverQueue = this.queue.get(message.guild.id);
+
             if (!serverQueue) {
                 message.channel.send(new MessageEmbed().setColor('YELLOW').setTimestamp().setAuthor(this.embeds.createdMusicPlayer.title).setDescription(this.embeds.createdMusicPlayer.description));
+            };
+
+            if (serverQueue && !this.sameVoiceChannel(message.member)) {
+                return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
             if (this.isYouTubePlaylistURL(args)) {
@@ -204,7 +237,7 @@ class MusicBot {
                 return this.sendErrorEmbed(this.messages.nothingPlaying, message);
             };
 
-            if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
+            if (!this.sameVoiceChannel(message.member)) {
                 return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
@@ -231,7 +264,7 @@ class MusicBot {
         */
         if (message.content.startsWith(this.prefix + 'lyrics')) {
             const serverQueue = this.queue.get(message.guild.id);
-            if (serverQueue && this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id == this.client.voice.connections.get(message.guild.id).channel.id) {
+            if (serverQueue) {
                 return await this.getSongLyrics(serverQueue.songs[0].title, message);
             };
 
@@ -252,7 +285,7 @@ class MusicBot {
                 return this.sendErrorEmbed(this.messages.nothingPlaying, message);
             };
 
-            if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
+            if (!this.sameVoiceChannel(message.member)) {
                 return this.sendErrorEmbed(this.messages.nothingPlaying, message);
             };
 
@@ -291,7 +324,7 @@ class MusicBot {
                 return this.sendErrorEmbed(this.messages.noMoreSongs, message);
             };
 
-            if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
+            if (!this.sameVoiceChannel(message.member)) {
                 return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
@@ -312,7 +345,7 @@ class MusicBot {
                 return this.sendErrorEmbed(this.messages.voiceChannelNeeded, message);
             };
 
-            if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
+            if (!this.sameVoiceChannel(message.member)) {
                 return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
@@ -337,7 +370,7 @@ class MusicBot {
                 return this.sendErrorEmbed(this.messages.voiceChannelNeeded, message);
             };
 
-            if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
+            if (!this.sameVoiceChannel(message.member)) {
                 return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
@@ -365,7 +398,7 @@ class MusicBot {
                 return this.sendErrorEmbed(this.messages.voiceChannelNeeded, message);
             };
 
-            if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
+            if (!this.sameVoiceChannel(message.member)) {
                 return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
@@ -389,7 +422,7 @@ class MusicBot {
                 return this.sendErrorEmbed(this.messages.voiceChannelNeeded, message);
             };
 
-            if (this.client.voice.connections.get(message.guild.id) && message.member.voice.channel && message.member.voice.channel.id !== this.client.voice.connections.get(message.guild.id).channel.id) {
+            if (!this.sameVoiceChannel(message.member)) {
                 return this.sendErrorEmbed(this.messages.sameVoiceChannel, message);
             };
 
@@ -453,6 +486,8 @@ class MusicBot {
 
     /**
      * @api private
+     * @param {url} url The video url from the message
+     * @param {videoClass} videoClass Check if the url in a video URL
      */
     isYouTubeVideoURL(url, videoClass = /^(https?:\/\/)?(www\.)?(m\.)?(youtube\.com|youtu\.?be)\/.+$/gi) {
         if (!url) {
@@ -468,6 +503,8 @@ class MusicBot {
 
     /**
      * @api private
+     * @param {url} url The video url from the message
+     * @param {playlistClass}  playlistClass Check if the url in a playlist URL
      */
     isYouTubePlaylistURL(url, playlistClass = /^.*(list=)([^#\&\?]*).*/gi) {
         if (!url) {
@@ -483,6 +520,8 @@ class MusicBot {
 
     /**
      * @api private
+     * @param {totalTime} totalTime The total video time
+     * @param {currentTime} currentTime The current time in the video progression
      */
     progressBar(totalTime, currentTime, barSize = 20, line = '▬', slider = '🔘') {
         if (!totalTime) {
@@ -511,6 +550,8 @@ class MusicBot {
 
     /**
      * @api private
+     * @param {errorMessage} errorMessage The message to send in the error embed.
+     * @param {message} The original message, from 'onMessage()' function.
      */
     sendErrorEmbed(errorMessage, message) {
         if (!errorMessage) {
@@ -526,6 +567,8 @@ class MusicBot {
 
     /**
      * @api private
+     * @param {args} args The args to find the video.
+     * @param {message} message The original message, from 'onMessage()' function.
      */
     async playQuery(args, message) {
         if (!args) {
@@ -562,6 +605,7 @@ class MusicBot {
             volume: 0.5,
             playing: true,
         };
+
         await this.queue.set(message.guild.id, queueConstruct);
         await queueConstruct.songs.push(song);
         try {
@@ -572,12 +616,15 @@ class MusicBot {
             this.queue.delete(message.guild.id);
             await message.member.voice.channel.leave();
             //await this.updateClientPresence(message);
-            return this.sendErrorEmbed(`${this.cannotConnect} \`${error}\``, message);
+            return this.sendErrorEmbed(`${this.messages.cannotConnect} \`${error}\``, message);
         };
     };
 
     /**
      * @api private
+     * @param {song} song The song, with all it informations (title, author...).
+     * @param {message} message The original message, from 'onMessage()' function.
+     * @param {serverQueue} serverQueue The serverQueue, using the map.
      */
     async playSong(song, message, serverQueue) {
         if (!message) {
@@ -609,6 +656,7 @@ class MusicBot {
 
     /**
      * @api private
+     * @param {message} message The original message, from 'onMessage()' function.
      */
     async updateClientPresence(message) {
         if (!message) {
@@ -629,6 +677,8 @@ class MusicBot {
 
     /**
      * @api private
+     * @param {args} args The song title
+     * @param {message} message The original message, from 'onMessage()' function.
      */
     async getSongLyrics(args, message) {
         if (!args) {
@@ -656,6 +706,8 @@ class MusicBot {
 
     /**
      * @api private
+     * @param {serverQueue} serverQueue The serverQueue using the map.
+     * @param {message} message The original message, from 'onMessage()' function.
      */
     async sendQueueEmbed(serverQueue, message) {
         if (!serverQueue) {
@@ -678,6 +730,42 @@ class MusicBot {
 
     /**
      * @api private
+     * @param {member} member The member from the message.
+     */
+    sameVoiceChannel(member) {
+        if (!member) {
+            throw new Error(this.interErrorMsg + 'The member is required on the sameVoiceChannel function.');
+        };
+
+        if (member.voice.channel.id !== member.guild.voice.channelID) {
+            return false;
+        };
+
+        return true;
+    };
+
+    /**
+     * @api private
+     * @param {member} member The member from the message.
+     */
+    canReact(member) {
+        if (!member) {
+            throw new Error(this.interErrorMsg + 'The member is required on the sameVoiceChannel function.');
+        };
+
+        if (member.voice.channelID !== member.guild.voice.channelID) {
+            return false;
+        };
+
+        return true;
+    };
+
+    /**
+     * @api private
+     * @param {message} message The embed music  message, with reactions.
+     * @param {queue} queue The queue, using the map
+     * @param {song} song The song found with ytdl-core
+     * @param {basicMessage} basicMessage The original message, from 'onMessage()' function.
      */
     async reactionsMessageSystem(message, queue, song, basicMessage) {
         if (!message) {
@@ -697,7 +785,7 @@ class MusicBot {
         };
 
         this.messagesReactions.set(message.guild.id, message.id);
-        const filter = (reaction, user) => user.id !== this.client.user.id && basicMessage.member.voice.channel && reaction.emoji.name === '⏯' || reaction.emoji.name === '⏭' || reaction.emoji.name === '🔈' || reaction.emoji.name === '🔊' || reaction.emoji.name === '⏹' && basicMessage.member.voice.channel.id === this.client.voice.connections.get(message.guild.id).channel.id
+        const filter = (reaction, user) => user.id !== this.client.user.id && reaction.emoji.name === '⏯' || reaction.emoji.name === '⏭' || reaction.emoji.name === '🔈' || reaction.emoji.name === '🔊' || reaction.emoji.name === '⏹'
         var collector = message.createReactionCollector(filter, {
             time: song.duration > 0 ? song.duration * 1000 : 600000
         });
@@ -705,9 +793,13 @@ class MusicBot {
             if (!queue) {
                 return;
             };
+            const member = basicMessage.guild.member(user);
             switch (reaction.emoji.name) {
                 case '⏯':
                     reaction.users.remove(user).catch(console.error);
+                    if (!this.canReact(member)) {
+                        return;
+                    };
                     if (queue.playing) {
                         queue.playing = false;
                         queue.connection.dispatcher.pause();
@@ -718,6 +810,9 @@ class MusicBot {
                     break;
                 case '⏭':
                     reaction.users.remove(user).catch(console.error);
+                    if (!this.canReact(member)) {
+                        return;
+                    };
                     if (queue.songs[1]) {
                         queue.connection.dispatcher.end();
                         collector.stop();
@@ -725,6 +820,9 @@ class MusicBot {
                     break;
                 case '🔈':
                     reaction.users.remove(user).catch(console.error);
+                    if (!this.canReact(member)) {
+                        return;
+                    };
                     if (queue.volume - 0.1 <= 0) {
                         queue.volume = 0;
                         queue.connection.dispatcher.setVolumeLogarithmic(queue.volume);
@@ -735,6 +833,9 @@ class MusicBot {
                     break;
                 case '🔊':
                     reaction.users.remove(user).catch(console.error);
+                    if (!this.canReact(member)) {
+                        return;
+                    };
                     if (queue.volume + 0.1 >= 1) {
                         queue.volume = 1;
                         queue.connection.dispatcher.setVolumeLogarithmic(queue.volume);
@@ -744,6 +845,9 @@ class MusicBot {
                     }
                     break;
                 case '⏹':
+                    if (!this.canReact(member)) {
+                        return reaction.users.remove(user).catch(console.error);
+                    };
                     queue.songs = [];
                     if (queue.playing === true) {
                         queue.connection.dispatcher.end();
@@ -770,6 +874,12 @@ class MusicBot {
         });
     };
 
+
+    /**
+     * @api private 
+     * @param {url} url The video URL, to verify it.
+     * @param {message} message The original message, from 'onMessage()' function.
+     */
     async playVideoUrl(url, message) {
         if (!url) {
             throw new Error(this.interErrorMsg + 'The url is required on the playVideoUrl function.');
@@ -785,6 +895,7 @@ class MusicBot {
             if (!songInfo) {
                 return this.sendErrorEmbed(this.messages.errorWhileParsingVideo, message);
             };
+
             const song = { id: songInfo.videoDetails.video_id, title: songInfo.videoDetails.title, url: songInfo.videoDetails.video_url, author: songInfo.videoDetails.author.name, authorUrl: songInfo.videoDetails.author.channel_url, duration: songInfo.videoDetails.lengthSeconds, thumbnailUrl: songInfo.player_response.videoDetails.thumbnail.thumbnails.pop().url, published: songInfo.videoDetails.publishDate, views: songInfo.player_response.videoDetails.viewCount };
             serverQueue.songs.push(song);
             return await message.channel.send(new MessageEmbed().setColor('DARK_PURPLE').setTimestamp().setThumbnail(song.thumbnailUrl).setDescription(`**\`${song.title}\`** ${this.embeds.addEmbed.hasBeenAdded}`));
@@ -793,6 +904,7 @@ class MusicBot {
             if (!songInfo) {
                 return this.sendErrorEmbed(this.messages.errorWhileParsingVideo, message);
             };
+
             const song = { id: songInfo.videoDetails.video_id, title: songInfo.videoDetails.title, url: songInfo.videoDetails.video_url, author: songInfo.videoDetails.author.name, authorUrl: songInfo.videoDetails.author.channel_url, duration: songInfo.videoDetails.lengthSeconds, thumbnailUrl: songInfo.player_response.videoDetails.thumbnail.thumbnails.pop().url, published: songInfo.videoDetails.publishDate, views: songInfo.player_response.videoDetails.viewCount };
             const queueConstruct = {
                 textChannel: message.channel,
@@ -821,6 +933,8 @@ class MusicBot {
 
     /**
      * @api private
+     * @param {query} query The args: search term in YouTube.
+     * @param {message} message The original message, from 'onMessage()' function.
      */
     async playPlaylist(query, message) {
         if (!query) {
@@ -885,6 +999,7 @@ class MusicBot {
 
     /**
      * @api private
+     * @param {message} message The playingMessage embed, to add it reactions.
      */
     async musicMessageReact(message) {
         if (!message) {
