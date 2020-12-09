@@ -31,7 +31,7 @@
     "ffmpeg-static": "^4.2.7",
     "node-fetch": "^2.6.1",
     "popyt": "^4.1.1",
-    "ytdl-core": "^4.1.0",
+    "ytdl-core": "^4.1.4",
     "ytpl": "^1.0.1"
   },
   "bugs": {
