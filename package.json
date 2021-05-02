@@ -1,6 +1,6 @@
 {
   "name": "discord-music-system",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "A very simple and powerful music module for Discord bots. Control your music with reactions. NEW: language translation!",
   "main": "index.js",
   "typings": "typings/MusicBot.d.ts",
