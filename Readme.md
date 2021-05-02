@@ -6,32 +6,30 @@
 
 ## 🔩 Installation
 ```
-npm install discord-music-system@latest
+$ npm install discord-music-system@latest
 ```
 
 ## 💻 Code example
 ```js
 const Discord = require('discord.js'); // Require discord.js
 const client = new Discord.Client(); // Create the bot client.
-const MusicBot = require('discord-music-system'); // Require the best package ever created on NPM (= require discord-music-system)
+const { MusicBot } = require('discord-music-system'); // Require the best package ever created on NPM (= require discord-music-system)
 
-const bot = new MusicBot({
-    botPrefix: 'some prefix', // Example: !
-    ytApiKey: 'your Ytb API key', // Video to explain how to get it: https://www.youtube.com/watch?v=VqML5F8hcRQ
-    botClient: client // Your Discord client. Here we're using discord.js so it's the Discord.Client()
+client.musicBot = new MusicBot(client, {
+    ytApiKey: 'YouTube API key',
+    prefix: '!', // Your bot prefix
+    language: 'en' // fr, en, es, pt
 });
 
-client.on('message', message => { // When the bot receive a message
-    if(message.content.startsWith(bot.prefix)) { // If the message starts with your prefix
-        bot.onMessage(message); // The music-system must read the message, to check if it is a music command and execute it.
+client.on('message', async message => {
+    if(message.author.bot) {
+        return;
     };
+    client.musicBot.onMessage(message);
 });
 
-client.login('some token'); // Login with your bot token. You can find the token at https://discord.com/developers/applications/
+client.login('Your Discord bot token'); // Login with your bot token. You can find the token at https://discord.com/developers/applications/
 ```
-
-## 🚀 Language
-* You can custom the bot language by editing the `language.json` in the `language` folder (3 translation included).
 
 ## 🤖 Commands
 * **PLAY**

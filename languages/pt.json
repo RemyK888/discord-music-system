@@ -1,0 +1,83 @@
+{
+    "messages": {
+        "noPrivateMessages": "Eu não respondo mensagens privadas.",
+        "voiceChannelNeeded": "Você precisa estar em um canal de voz para utilizar este comando.",
+        "cannotConnect": "Eu não consigo conectar ao canal de voz, verifique se eu possouo as permissões necessarias!",
+        "noArgs": "Você precisa adcionar argumentos de pesquisa.",
+        "sameVoiceChannel": "Você deve estar no mesmo canal que o bot.",
+        "nothingPlaying": "Não há música tocando.",
+        "noMoreSongs": "As músicas da palylist acabaram.",
+        "volBeetween": "O volume deve ser entre `0` e `100`!",
+        "validNumberPosition": "A posição deve ser maior que `0`.",
+        "couldNotBeFound": "Este som não pode ser encontrado.",
+        "restrictedOrNotFound": "Esta música está restrita ou não pode ser encontrada!",
+        "hasBeenAdded": "foi adcionado a lista.",
+        "errorWhileParsingVideo": "Um erro ocorreu durante a pesquisa do vídeo.",
+        "errorWhileParsingPlaylist": "Um erro ocorreu ao processar a lista de músicas."
+    },
+    "embeds": {
+        "createdMusicPlayer": {
+            "title": "Informação",
+            "description": "O `player de música` foi **criado**!"
+        },
+        "nowPlaying": {
+            "title": "🎵 Tocando agora",
+            "videoLink": "link do video",
+            "channelLink": "Link do canal",
+            "remainingTime": "Tempo restante:",
+            "live": "◉ LIVE"
+        },
+        "skipSong": {
+            "askedBy": "Pedido por:",
+            "beenSkipped": "foi pulado."
+        },
+        "volumeEmbed": {
+            "title": "🔊 Volume",
+            "changedFrom": "Mudado de:",
+            "to": "para"
+        },
+        "pauseEmbed": {
+            "title": "Informação",
+            "description": "**⏸ Música despausada.**",
+            "askedBy": "Pedido por:"
+        },
+        "resumeEmbed": {
+            "title": "Informação",
+            "description": "**▶ Despausou a música.**",
+            "askedBy": "Pedido por:"
+        },
+        "removeEmbed": {
+            "title": "🚫 Removido",
+            "removedBy": "🔎 Removido por:",
+            "published": "Postado",
+            "views": "Views"
+        },
+        "errorEmbed": {
+            "title": "Erro"
+        },
+        "playerDestroyedEmbed": {
+            "author": "Informação",
+            "description": "O `player de música` foi **desativado**!"
+        },
+        "lyricsEmbed": {
+            "searching": "Procurando...",
+            "askedBy": "Perguntado por "
+        },
+        "playEmbed": {
+            "addedBy": "🔎 Adcionado por",
+            "luckySearch": "com lucky search.",
+            "published": "Publicado",
+            "views": "Views"
+        },
+        "queueEmbed": {
+            "queue": "lista"
+        },
+        "addEmbed": {
+            "playlist": "A playlist",
+            "hasBeenAdded": "foi adcionada a lista."
+        }
+    },
+    "presence": {
+        "nothing": "🎵 Nada"
+    }
+}

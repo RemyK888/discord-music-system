@@ -1,8 +1,9 @@
 {
   "name": "discord-music-system",
-  "version": "3.2.2-beta",
-  "description": "A very simple and powerful music module for Discord bots. Control your music with reactions. NEW: custom language translation!",
+  "version": "3.3.0",
+  "description": "A very simple and powerful music module for Discord bots. Control your music with reactions. NEW: language translation!",
   "main": "index.js",
+  "typings": "typings/MusicBot.d.ts",
   "directories": {
     "example": "example"
   },
@@ -26,16 +27,20 @@
   "author": "RemyK#3876",
   "license": "MIT",
   "dependencies": {
-    "@discordjs/opus": "^0.3.2",
-    "discord.js": "^12.3.1",
-    "ffmpeg-static": "^4.2.7",
-    "node-fetch": "^2.6.1",
-    "popyt": "^4.1.1",
-    "ytdl-core": "^4.1.4",
-    "ytpl": "^1.0.1"
+    "@discordjs/opus": "^0.5.0",
+    "discord.js": "^12.5.3",
+    "ffmpeg-static": "^4.3.0",
+    "lyrics-finder": "^21.7.0",
+    "popyt": "^5.0.0",
+    "ytdl-core-discord": "^1.3.0",
+    "ytpl": "^2.2.0"
   },
   "bugs": {
     "url": "https://github.com/RemyK888/discord-music-system/issues"
   },
-  "homepage": "https://github.com/RemyK888/discord-music-system#readme"
+  "homepage": "https://github.com/RemyK888/discord-music-system#readme",
+  "devDependencies": {
+    "@types/node": "^10.17.51",
+    "typescript": "^4.2.4"
+  }
 }

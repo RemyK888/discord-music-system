@@ -1,2 +1,4 @@
-const MusicBot = require('./src/MusicBot');
-module.exports = MusicBot;
+module.exports = {
+    MusicBot: require('./src/MusicBot.js'),
+    version: require('./package.json').version
+};
