@@ -167,10 +167,9 @@ class MusicBot {
         if (message.channel.type === 'dm') {
             return this.sendErrorEmbed(this.language.messages.noPrivateMessages, message);
         };
-        const command = message.content.slice(this.prefix.length).trim().split(/ +/g).shift().toLowerCase();
         const args = message.content.split(' ').slice(1).join(' ');
         // Play command
-        if (command === 'play' || command === 'add' || command === 'join') {
+        if (message.content.startsWith(this.prefix + 'play') || message.content.startsWith(this.prefix + 'add') || message.content.startsWith(this.prefix + 'join')) {
             if (!message.member.voice.channel) {
                 return this.sendErrorEmbed(this.language.messages.voiceChannelNeeded, message);
             };
@@ -205,7 +204,7 @@ class MusicBot {
             };
         }
         // Stop command 
-        else if (command === 'stop' || command === 'kill' || command === 'destroy' || command === 'leave') {
+        else if (message.content === this.prefix + 'stop' || message.content === this.prefix + 'kill' || message.content === this.prefix + 'destroy' || message.content === this.prefix + 'leave') {
             if (!message.member.voice.channel) {
                 return this.sendErrorEmbed(this.language.messages.voiceChannelNeeded, message);
             };
@@ -236,7 +235,7 @@ class MusicBot {
             });
         }
         // Lyrics command
-        else if(command === 'lyrics') {
+        else if(message.content.startsWith(this.prefix + 'lyrics')) {
             const serverQueue = this.queue.get(message.guild.id);
             if (serverQueue) {
                 return await this.getSongLyrics(serverQueue.songs[0].title, message);
@@ -250,7 +249,7 @@ class MusicBot {
             };  
         }
         // Now playing command
-        else if(command === 'np' || command === 'nowplaying' || command === 'current') {
+        else if(message.content === this.prefix + 'np' || message.content === this.prefix + 'nowplaying' || message.content === this.prefix + 'current') {
             const serverQueue = this.queue.get(message.guild.id);
             if (!serverQueue) {
                 return this.sendErrorEmbed(this.language.messages.nothingPlaying, message);
@@ -278,7 +277,7 @@ class MusicBot {
             return message.channel.send(nowPlaying);
         }
         // Skip command
-        else if(command === 'skip' || command === 'next' || command === '>>') {
+        else if(message.content === this.prefix + 'skip' || message.content === this.prefix + 'next' || message.content === this.prefix + '>>') {
             if (!message.member.voice.channel) {
                 return this.sendErrorEmbed(this.language.messages.voiceChannelNeeded, message);
             };
@@ -304,7 +303,7 @@ class MusicBot {
             return message.channel.send(new MessageEmbed().setColor('ORANGE').setFooter(`${this.language.embeds.skipSong.askedBy} ` + message.author.tag, message.author.displayAvatarURL()).setDescription('⏩ `' + serverQueue.songs[0].title + `\` ${this.language.embeds.skipSong.beenSkipped}`));
         }
         // Queue command
-        else if(command === 'queue' || command === 'list' || 'show') {
+        else if(message.content === this.prefix + 'queue' || message.content === this.prefix + 'list' || message.content === this.prefix + 'show') {
             if (!message.member.voice.channel) {
                 return this.sendErrorEmbed(this.language.messages.voiceChannelNeeded, message);
             };
@@ -324,7 +323,7 @@ class MusicBot {
             return this.sendQueueEmbed(serverQueue, message);
         }
         // Volume command
-        else if(command === 'volume' || command === 'setvolume') {
+        else if(message.content.startsWith(this.prefix + 'volume') || message.content.startsWith(this.prefix + 'setvolume')) {
             if (!message.member.voice.channel) {
                 return this.sendErrorEmbed(this.language.messages.voiceChannelNeeded, message);
             };
@@ -349,7 +348,7 @@ class MusicBot {
             }; 
         }
         // Pause command
-        else if(command === 'pause') {
+        else if(message.content === this.prefix + 'pause') {
             if (!message.member.voice.channel) {
                 return this.sendErrorEmbed(this.language.messages.voiceChannelNeeded, message);
             };
@@ -369,7 +368,7 @@ class MusicBot {
             };   
         }
         // Resume command
-        else if(command === 'resume') {
+        else if(message.content === this.prefix + 'resume') {
             if (!message.member.voice.channel) {
                 return this.sendErrorEmbed(this.language.messages.voiceChannelNeeded, message);
             };
@@ -389,7 +388,7 @@ class MusicBot {
             }; 
         }
         // Remove command
-        if(command === 'remove' || command === 'delete') {
+        if(message.content.startsWith(this.prefix + 'remove') || message.content.startsWith(this.prefix + 'delete')) {
             if (!message.member.voice.channel) {
                 return this.sendErrorEmbed(this.language.messages.voiceChannelNeeded, message);
             };
