@@ -1,8 +1,16 @@
-[![NPM](https://nodei.co/npm/discord-music-system.png)](https://nodei.co/npm/discord-music-system/)
 
-[![forthebadge](https://forthebadge.com/images/badges/made-with-javascript.svg)](https://forthebadge.com)
+<div align="center">
+  <img src="https://nodei.co/npm/discord-music-system.png">
+  <br>
+  <img src="https://forthebadge.com/images/badges/made-with-javascript.svg">
+  <br>
+  <img src="https://img.shields.io/npm/dt/discord-music-system?style=for-the-badge">
+  <br>
+  <br>
+  <h1>🎵 Discord-Music-System</h1>
+</div>
 
-# 🎵 Discord-Music-System
+*A very simple and powerful music module for Discord bots. Control your music with reactions.*
 
 ## 🔩 Installation
 ```
